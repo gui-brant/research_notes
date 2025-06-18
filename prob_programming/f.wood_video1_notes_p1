@@ -1,0 +1,36 @@
+Notes based on: https://www.youtube.com/watch?v=6Lqt07enBGs&t=1683s
+
+1. What is Probabilistic Programming?
+	Much like any computer science approach, you're given data (output from some program) that severs as observations or parameters, then you write a program that generates data (that is, not a set of equations, unlike regular statistics), then the program will output more observations. The main task of your program is now to invert itself and figure out what observations would be generated if the parameters were to be the previous iteration's output observations:
+
+Parameters/Observations --> Program --> Other observations --> Program --> New Observations/Parameters
+
+2. What are the goals:
+	1. "Best path towards [AI]"
+	2. Accelerate iteration over models: 
+		- Inference (drawing conclusions about unknown quantities) is automated
+		- Generative code is easier than deriving inverse models. You write code, you don't kill yourself with a bazillion equations.
+	3. Accelerate iteration over inference procedures:
+		- Inference is hard. You have a bunch of unknown shit and the code is meant to figure out what to do with that. But, it's really rewarding, because now the code can do pretty much anything. In the words of Frank Wood, "I'm not interested in papers that take a model and show that you can do inference in that model better," meaning you want to make sure that your code is optimized for the circumstances, not for a model, for adaptability.
+		- Point is: you wanna test your code against different inference procedures, meaning it can adapt to "the broadest set of models possible." Prob programming is good.
+		- Hence, it sits below a programming language. It's a compiler optimizer, which makes it hard, but really really rewarding (since now your code is applicable to a bunch of situations).
+	4. Enable development of more expressive models:
+		- Prob Prog expresses a superset of graphical models. One program understand a lot about stats, hence it can adapt.
+		
+3. Systems of Probabilistic Programming:
+	1. Application or Model driven:
+		-BUGS: you write the description of a (graphical) model and perform automatic inference
+		-STAN: hierarchical Bayesian model with continuous parameters and is differentiable wrt to those parameters
+		-Infer.NET: message passage on a factor graph
+		- And there are others: IBAL/Figaro or BLOG
+	2. Turing-Complete Languages: really useful for AI and cognitive science implications; generalize inference over a lot of questions over a unified languages.
+		- Church is the first paper with this concept (it's as old as us); it was initially a language for generative models
+		- This man did Anglican lol. He's sooooo stacked. It does "a different kind of inference" that's used in Prob-C.
+		- Venture has supposedly achieved high-scalability that Anglican couldn't. It's similar to Venture in syntax though.
+	
+4. Anglican:
+	- Techniques in Anglican are transferrable to Venture
+	- It introduced MCMC and PMCMC, which allows for parallelism fairly well and massive scalability
+	- It improves the performance over many programs
+
+--> Notes go up to 25ish minutes of video. It's ideally not complete, but I've decided to learn more about RL before moving onto this for the time being. 
