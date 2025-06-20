@@ -1,0 +1,110 @@
+Notes done based on: http://incompleteideas.net/book/RLbook2020.pdf
+
+Part 1: Tabular Solution Methods
+
+Chapter 2: Multi-armed Bandits
+- There are two main forms of learning: instructively and evaluative. The latter is what RL is concerned with; the feedback relies on the action taken, hence the need to explore actions. Instructive always has a correct path regardless of the action taken and is hence the basis of supervised learning. 
+
+2.1 A k-armed bandit problem: the name is a generalization to something like a slot machine with k levers. You want to find the best levers so that, after 1000 pulls, you have maximized jackpots.
+
+	- Each k action, has an expected or mean reward. We may call this the action's VALUE. For a time t, the action is denoted as A_t and its reward as R_t. We may all any arbitrary action a, while an arbitraty reward would be q_*(a). 	That said, we may affirm:
+
+	q_*(a) .= E[R_t| A_t=a] (.= means "it's defined as") --> This says: the actual reward value, q_*(a) is defined as (.=) the average expected value of R_t if a is selected as A_t.
+
+	We may also define an expected value of the reward, for the actual value is often not known right away, as Q_t(a). One of our many goals to make sure that Q_t(a) is very close to q_*(a). 
+	At any given time step, t, there will always be an estimated reward value, Q_t(a), that is greatest. Then, A_t is called the GREEDY action. This means you're EXPLOITING your current option. Otherwise, A_t would be NONGREEDY and 	you would be EXPLORING. The latter improves the estimations of nongreedy values, which may reveal improvements in decision-making on the long-run. We say, then, that there is a "conflict" between exploration and exploitation; you 	lose short-term to gain long-term and vice-verse.
+	
+
+	- The biggest problem with RL is balancing exploration and exploitation. We'll see this more in the future, but it's a convoluted issue. For now, we'll look at the basics of this concept.
+
+2.2 Action-value Methods: these are methods to estimate the values of actions. They allows for action selection decision-making. 
+
+	- An action is nothing but a mean reward when selected. We may estimate this by the average rewards received.
+	Q_t(a) .= (sum of rewards when a taken prior to t)/(sum of times a taken prior to t) --> Check out figure 2.1
+	In this method, as the denominator (sum of times a taken prior to t) goes to infinity, then Q_t(a) approaches q_*(a). To say, the more you try, the better you'll get.
+	
+	- The simplest way to select an action is by highest estimated value, Q_t(a), or pick the greedy action. If tied, one may use any arbitrary way to decide. We denote this action as A_t .= argmax_a Q_t(a),
+	where argmax_a denotes the action a for which the expression that follows is maximized, meaning a such that Q_t(a) is maximum. 
+	This only always selects the greedy action. A way of selection other actions is by setting a small probability (that's capital epsilon) that selects randomly from among all other nongreedy actions independent of action-value 	estimates. Methods using this near-greedy rules are called (capital)epsilon-greedy methods.
+	
+	Exercise 2.1 In epsilon-greedy action selection, for the case of two actions and epsilon = 0.5, what is the probability that the greedy action is selected? --> 0.5
+
+2.3 The 10-armed Testbed: Here, we look at a k-armed bandit problem, where k=10. In other words, there is a single situation where 10 different actions are possible. In the book's example, 2000 k-armed bandit problems are randomly generated in this setting.
+	
+	- The way we test any one learning method is by using what we call the 10-armed testbed. We create 2000 different setups for the same decision. Each setup will experience over 1000 time steps. That is called a run. Therefore, we	make 2000 different runs. Now, the problem that the model is trying to solve is the same every time and it is also given 10 different actions to choose from, but those actions might be different and its hyperparameters.
+	- It's a big example to just show you that, yes, you do need to explore and, yes, exploration must be balanced with exploitation. You can read back for more details, really, but that's about the core of it. 
+	- Exercise 2.2: Bandit example Consider a k-armed bandit problem with k = 4 actions, denoted 1, 2, 3, and 4. Consider applying to this problem a bandit algorithm using"-greedy action selection, sample-average action-value 	estimates, and initial estimates of Q1(a) = 0, for all a. Suppose the initial sequence of actions and rewards is A1 = 1,R1 = -1, A2 = 2, R2 = 1, A3 = 2, R3 = -2, A4 = 2, R4 = 2, A5 = 3, R5 = 0. On some of these time steps the 	epsilon-case may have occurred, causing an action to be selected at random. On which time steps did this definitely occur? On which time steps could this possibly have occurred? --> I'll post a picture of this, because I had to 	hand-calculate some things, but, in short, we know that A3 was greedy, A4 and A5 were non-greedy, and A1 and A2 are ambiguous (tie-breakers). --> Check out Figure 2.2
+	- Exercise 2.3 In the comparison shown in Figure 2.2, which method will perform best in the long run in terms of cumulative reward and probability of selecting the best action? How much better will it be? Express your answer 	quantitatively. --> The red method will perform best in the long-run. Likely considerably better... I'm not too sure how to express this quantitatively, though.
+
+
+2.4 Incremental Implementation: let's look a bit at implementation methods that take into account efficient computation. Obviously, in this field, you want the program to be very efficient. Efficiency = model that actually works.
+
+	- Based on exercise 2.2, you noticed that the notation gets cumbersome as hell. The authors propose a way of fixing this by making it more confusing to understand, really. R_i means the reward received AFTER the ith SELECTION OF 	THIS ACTION. The new notation is the subscript n. "n" represents the number of times that an action was picked starting at n = 1. If you chose a = 1 zero times, then n = 1. If you did it once, then n = 2. No picks means that 	you're still at the first, initial estimate, meaning Q_1.
+	- The main point is: what we did just above this line and were doing for exercise 2.2 is unnecessarily heavy for the computer. We may device easily an incremental formulas for updating averages. Then, we don't need mega tables 	to keep track of things, we just run the equation given it's previous value. I will have a picture of this also here.
+	
+	-In a nutshell, if this is your third time picking a = 1, then you require Q_3 and R_3, as per Q_n+1 = Q_n + (1/n)[R_n - Q_n]. In other words, you require the estimate of success before the third pick (current run) and the 	reward value after this third run. So, Q_3 and R_3, though they both share the subscript 3, have completely different timings. Q_3 is before the third run and R_3 is after the third run, but you're really interested on the 	estimate that gets created after the third run, or Q_4.
+	
+	**Generally: NewEstimate <-- OldEstimate + StepSize[Target - OldEstimate].** [Target - OldEstimate] is an error in the estimate, reduced by taking a step toward the "Target."
+
+	- In this book, you'll see 1/n, or the step size, represented as alpha or alpha_t(a).
+
+2.5 Tracking a Nonstationary Problem: we've looked at stationary reward probabilities only, meaning the odd for rewards don't change over time. That's essentially a game of LoL but without having time running or things happening... just a screenshot. That's not very realistic, now, is it? In other words, older that becomes less useful, while newer data is more prominent. 
+
+	- A way to tackle this issue is to make the step-size, alpha, a constant from 0 (non inclusive) to 1 (inclusive). This results in weighted averages plus the initial estimate. In terms of mathematics, the book shows a derivation 	from the older version of the equation, but with a constant alpha step-size. It becomes apparent that the older the reward, the less weight it will account to the weighted average that Q_n+1 becomes. In other words, the math 	works by having the sum exponentially decrease the weight of older rewards. 
+	The issue with this method is that it tends to not converge to the mean that is expected. It will adjust forever, mathematically. However, in a nonstationary case, that's desirable. As things change, so does the RL's reading.
+	- Exercise 2.4 If the step-size parameters, alpha_n, are not constant, then the estimate Qn is a weighted average of previously received rewards with a weighting di↵erent from that given by (2.6). What is the weighting on each 	prior reward for the general case, analogous to (2.6), in terms of the sequence of step-size parameters? --> In the general case, as n increases, the weight of newer rewards decreases, allwoing for convergence. In that sense, 	each prior reward gets a higher weight as the step size increases. 
+	- Exercise 2.5 (programming) Design and conduct an experiment to demonstrate the diculties that sample-average methods have for nonstationary problems. Use a modified version of the 10-armed testbed in which all the q*(a) start 	out equal and then take =independent random walks (say by adding a normally distributed increment with mean 0 and standard deviation 0.01 to all the q*(a) on each step). Prepare plots like Figure 2.2 for an action-value 	method using sample averages, incrementally computed, and another action-value method using a constant step-size parameter,  alpha = 0.1. Use epsilon = 0.1 and longer runs, say of 10,000 steps. --> 
+
+2.6 Optimistic Initial Values: setting the initial estimates to an action's value is important for learning process. What if we start the initial value of Qn(a) really high? 
+	
+	- If instaed of setting the 10-armed testbed initial values to 0, let's say we set them all to +5. This will encourage exploration because the reward gained from any action will be less than the starting estimate, thus the 	machine will likely explore every option when it's time to make a decision in its next time step. The result is that the system explores quite a bit before estimates converge, even if only greedy actions are selected. This is 	called "optimistic initial values." It actually performs better than a starting estimate of zero over time. Obviously, it starts off by having less success due to large exploration, but it's better over time. 
+	- DISCLAIMER: It's a nice trick to improve performance of STATIONARY problems, but it's not generally useful for encouraging exploration. For that matter, anything to do with initial conditions doesn't have much effect in non-	stationary cases because the situation changes entirely with time. 
+	EXERCISES:
+	- Exercise 2.6: Mysterious Spikes The results shown in Figure 2.3 should be quite reliable because they are averages over 2000 individual, randomly chosen 10-armed bandit tasks. Why, then, are there oscillations and spikes in the early part of the curve 	for the optimistic method? In other words, what might make this method perform particularly better or worse, on average, on particular early steps? --> Since all initial estimates are very high, there is always the possibility that exploration 	will randomly lead to an extremely positive results. Then, it will keep on choosing that same high-reward option, as to create this oscillation, until it's shown otherwise. 
+	- Exercise 2.7: Unbiased Constant-Step-Size Trick In most of this chapter we have used sample averages to estimate action values because sample averages do not produce the initial bias that constant step sizes do (see the analysis leading to (2.6)). 	However, sample averages are not a completely satisfactory solution because they may perform poorly on nonstationary problems. Is it possible to avoid the bias of constant step sizes while retaining their advantages on nonstationary problems? One way 	is to use a step size of (n.= ↵/o¯n) to process the nth reward for a particular action, where ↵ > 0 is a conventional constant step size, and ¯on is a trace of one that starts at 0: (o¯n.= ¯on1 + ↵(1  o¯n1), for n > 0, with ¯o0.= 0.) Carry out an analysis like that 	in (2.6) to show that Qn is an exponential recency-weighted average without initial bias. --> Lame.
+	
+2.7 Upper-Confidence-Bound Action Selection: so far, the epsilon-greedy action selection has been picking randomly from other actions to explore. It would be nice to avoid those actions that are nearly greedy or extremely uncertain. 
+	
+	- We may select actions according to the equation on Figure 2.3. It says: select an action at time t whose output is maximum to the function. The function itself is based on the addition of c*sqrt[ln(t)/(number of times a was 	picked as an action; if this is 0, then a is maximizing action, or guaranteed to be chosen)], where c controls the degree of exploration, to Qt(a), or the current estimated value to success for this action. 
+	In other words, it's a funtion that finds the highest estimate value from all possible actions by accounting degree of exploration and number of times that the action was chosen. That latter bit is a measure of uncertainty in 	the estimate. This is the UPPER CONFIDENCE BOUND (UCB). 
+	- The reason why this works is because, if chosen, Nt or the number of times a was picked as an action goes down, meaning uncertainty decreases. Otherwise, ln(t) goes up with an untouched Nt, meaning uncertainty increases. 
+	The logarithmic part mathematically allows for actions that have been picked many times to be picked less often over time. 
+	- As you might have guessed, this doesn't work so nicely outside of the stationary realm, or when things get too large. It's often not very practical.
+	EXERCISES:
+	- Exercise 2.8: UCB Spikes In Figure 2.4 the UCB algorithm shows a distinct spike in performance on the 11th step. Why is this? Note that for your answer to be fully satisfactory it must explain both why the reward increases on the 11th step and why it 	decreases on the subsequent steps. Hint: If c = 1, then the spike is less prominent. --> There are exactly 10 actions on the 10-armed testbed. The fact that the 11th action is a spike is just telling us that the model has tried out all of	the different possibilities at least once and it is now fairly confident that there is one greedy action that works most of the time. Then, after that, it keeps on adjusting its actions to improve efficiency. However, as one 	would expect, the moment it figures out which action is the greedy one is the moment that it starts to properly exploit, hence the spike. Although, again, it must keep on exploring while exploiting to maximixe efficiency, hence 	the slow increase on subsequent steps. In other words, the spike happens because the 11th choice is the first informed choice and the UCB model dips because it continues to explore, while also exploiting, for optimal results.
+
+2.8 Gradient Bandit Algorithms: we'll look at a different way of choosing actions. Instead of using long term reward esimates, we'll look at preferences that have nothing to do with rewards.
+	
+	- The preference is determined by a softmax distribution (for instance, Gibbs or Boltzmann distributions). You can see it in Figure 2.5.
+	We denote this as the probability of taking an action, a, at time t or pi_t(a).
+	- The softmax natural learning algorithm is based on stochastic gradient ascent. The term H_t+1 is probabilistic, of course, but those odds change if the mean reward falls below a baseline defined by the user. Then, the 	probability of choosing that action is decreased. The book goes into more detail on the derivation of this baseline. It's a partial derivative of the expected reward in terms of H_t (or the preference). 
+	- What's really imporatnt to note here, after a lot of derivation, is that we did not require properties of the baseline, other than it not depedning on the selected action. It does not directly effect the expected update, but 	it affects the variance of the update so it might take longer to converge if you pick a bad one. It's not always the best to pick the average of the rewards as the baseline, but it works and is pretty simple. He did do that in 	the derivation by the way. 
+	EXERCISES: 
+	- Exercise 2.9 Show that in the case of two actions, the soft-max distribution is the sameas that given by the logistic, or sigmoid, function often used in statistics and artificial neural networks. --> I personally think it's a mid exercise.
+
+2.9 Associative Search (Contextual Benefit): We haven't even looked at what is, honestly, the most important part of the project - different situations take different actions. We've been assumming that there is just one situation with a set of actions to be taken. That is, obviously, not very realistic. As a reminder, the goal is to find a policy; a map from situations to actions that are best in each situation. Let's dive into the basics to set the stage.
+	
+	- We first discuss how nonassociative tasks (different situations, so different actions) extend into associative settings (settings where there is just one task and several action options). 
+	Consider this, we have a bunch of different k-armed bandit tasks. With each step, this task will change at random. In that sense, you have a different situation with different actions in every step, hence creating a sort of 	nonassociative tasks by bundling associative ones and picking at random with every step. 
+	In fact, though, this is not nonassociative as your current decision affects only the reward gained, not the next situation to be presented. However, you do have to learn a policy. With every new situation presented, there must 	be a correct, optimal action. 
+	EXERCISE:
+	- Exercise 2.10 Suppose you face a 2-armed bandit task whose true action values change randomly from time step to time step. Specifically, suppose that, for any time step, the true values of actions 1 and 2 are respectively 10 and 20 with probability 0.5 	(case A), and 90 and 80 with probability 0.5 (case B). If you are not able to tell which case you face at any step, what is the best expected reward you can achieve and how should you behave to achieve it? Now suppose that on each step you are told whether you 	are facing case A or case B (although you still don’t know the true action values). This is an associative search task. What is the best expected reward you can achieve in this task, and how should you behave to achieve it? 
+	--> Okay, so there are two actions in the problem. However, with every step, the true value of each action changes randomly. So, it's hard to look for the "correct" estimate conversion since iteraitvely it'll be all over the 	place. 
+	We're given two case with a 50/50 change of picking A or B:
+	A: true values: 10 and 20, respectively. 
+	B: true values: 90 and 80, respectively. 
+	There is the change of seeing two different situations. It's not like the situations would necessarily change in of themselves. You can learn based on previous experiences still, but I guess it would be more dilluted, meaning 	more runs are required to converge to a reasonable estimate. If you know which you'll face, then you get to map how a series of actions in accordance. You get to learn to learn, in other words. You see the pattern of action		series and you start to learn the likelihood of certain actions rewarding optimally if done in a certain way given a serie. 
+	Oooh, I see Chat's answer now: if you don't know which case you'll get, then you can just guess what rewards you'll end up getting in the long run: E[R1] = 0.5 * 10 + 0.5 *90 = 50, for case A; E[R2] = 0.5 * 20 + 0.5 *80 = 50; 	for case B.
+	However, when you know which situation is coming, then you can develop a policy: E[R] = 0.5 * reward in A + 0.5 * reward in B = 0.5 *20 + 0.5 * 90 = 55.
+
+2.10 Summary: 
+	
+	- In chapter 2, we have presented ways of balancing exploration with exploitation:
+		The epsilon-greedy method chooses randomly a small fraction of time.
+		The Upper-Confidence Bound method chooses deterministically. Exploration is achieved by favouring actions that have not been picked much so far.
+		The Gradient Bandit algorithms estimate preferences instead of action values, where preferred actions are found through probabilisitc and graded softmax distributions. 
+		Also, optimalic estiamtes causes greedy methods to explore a lot more. 
+	- We can make a parameter study to see which method is the best. It looks at the average reward over 1000 steps relative to each method's parameter of performance.The height and shape of each plot is analyzed for the comparison.
+	Sensitivity to a parameter value is also key in the analysis.
+	Upper Confidence Bound seems to perform the best in this problem.  
+	- The book mentions other ways that the k-lever bandit problem can become an instance of a full RL problem, but it also mentions that those methods are out of the scope of the books introduction. To note, things like the 	GITTINS-INDEX, BAYESIAN METHODS, POSTERIOR SAMPLING OR THOMPSON SAMPLING are mentioned. 
