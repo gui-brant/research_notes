@@ -1,0 +1,149 @@
+Part 1: Tabular Solution Methods 
+
+--> Two days should be enough to complete this. 
+
+Chapter 3: Finite Markov Decision Process (finite MDP): we now look at choosing different actions in different situations. There will be a need to balance immediate and delayed reward tradeoff. Actions influence subsequent states. 
+
+3.1 The Agent-Environment Interface [long]: there is an agent, an environment, and a state. The agent finds itself in a state, where it may take action. This action transitions the agent to another state, say s', where a reward, r, is generated. 
+
+	- It's really important to review statistics notation here. This will be ever more important as we move forward. Like any mathematics, it's really complicated-looking until you understand what it's trying to convey. Then, it 	becomes fairly simple, actually. 
+	Check out figure 3.1. Let's read out what it says: for any state s and action a, the total probability of ending up on a new state s' and receiving some reward is 1. Meaning, something MUST happen to get some reward. "p" 		represents a probability distribution, something you're familiar with. Then, using that distribution as a function to model data, it poses the question: what are the odds that I will get s' situation and a r reward if I find 	myself in state s taking action a? Then, it tells us that if you, in fact, sum up all of the possible rewards and then all of the possible subsequent situations, the odds are absolute, meaning something must happen. The agent 	must get any reward by switching into any other situation, which is indeed very true. 
+	
+	This implies that the current state and reward, S_t and R_t, depends on the preceding state and action, S_t-1 and A_t-1. If this state contains relevant information about all aspects of the past agent-environment interaction for 	future action-reward, then it is said to have MARKOV PROPERTY. (Note: E means expected value or average value).
+	Figure 3.2 shows other ways of expressing what is said in Figure 3.1.
+
+	- MDP is really useful and flexible. The time-steps don't have to be modelled as real time. They can be modelled as arbitrary successive actions or stages of decision making. Also, actions can be high or low level (eating 	breakfast or voltage to move arms). States can also be pretty much anything; from sensor readings to symbolic descriptions of objects. 
+	
+	- As a definition, anything that cannot be arbitrarily changed by the agent is considered part of the environment. The agent-environment boundary is representative of the agent's limits in absolute control, but not in knowledge.	The agent may know how to work something out, but still struggle to do it. The agent may be able to read a sheet of music, but it might have a hard time playing it. Capability and knowledge are distinct. 
+	The agent-environment boundary is defined for specific state, action, and reward decision-making tasks. Thus, a single robot can have many agents performing high-level and low-level tasks. The high-level agent may converse with 	a low-level agent to make the high-level agent's decision come to life.
+	To be descriptive, an agent faces three basic signals: 1. the choice signal (action), 2. the signal that is the basis of the choice signal (the state), and 3. the goal defining signal (the reward).
+
+	- The way in which you represent states and actions vary greatly and highly define the performance of the model. In that sense, this is an art more than a science.
+	
+	- MDP defined: a mathematical framework for modelling sequential decision-making in stochastic environments. At each discrete time step, the agent:
+		1. Observes the current state.
+		2. Chooses an action, At, as per some policy, pi.
+		3. The environment produces a reward, R_t+1, and transitions to a new state, S_t+1.
+		4. Repeat process. 
+	This, of course, implies that the Markov Property exists. The only thing that matters to predicting (in the distribution of) the next state and reward is the current state and action taken. Once that is known, the agent does not 	require any previous information to make a prediction. 
+
+	EXERCISES:
+	- Exercise 3.1 Devise three example tasks of your own that fit into the MDP framework, identifying for each its states, actions, and rewards. Make the three examples as di↵erent from each other as possible. The framework is 	abstract and flexible and can be applied in many di↵erent ways. Stretch its limits in some way in at least one of your examples. --> MDP is essentially an average number of attempts that converge to a conclusion. The more one 	attempts an action in a state, the more that action converges to an absolute value. --> 1. Being tired. (State: tired, Action: pass boiling water through coffee powder, Reward: Caffeine) 2. Ganking a lane in LoL. (State: No 	advantage over enemy; Action: Ganking a lane; Reward: gold + exp) 3. Playing a 	music piece on the piano (State: a new note is coming up, I just played a note; Action: play a new note in the correct musical dynamics; Reward: 	beautiful music). 
+
+	- Exercise 3.2 Is the MDP framework adequate to usefully represent all goal-directed learning tasks? Can you think of any clear exceptions? --> It's not so adequate for tasks that follow strict patterns. In other words, it's a terrible frame	work for anything related to planning or memorization. For instance, if it were to simply recall human anatomy, then it would be unnecessarily heavy and not as efficient as, say, the supervised learning framework. 
+
+	- Exercise 3.3 Consider the problem of driving. You could define the actions in terms of the accelerator, steering wheel, and brake, that is, where your body meets the machine. Or you could define them farther out—say, where the rubber meets the road, 	considering your actions to be tire torques. Or you could define them farther in—say, where your brain meets your body, the actions being muscle twitches to control your limbs. Or you could go to a really high level and say that your actions are your 	choices of where to drive. What is the right level, the right place to draw the line between agent and environment? On what basis is one location of the line to be preferred over another? Is there any fundamental reason for preferring one location over 	another, or is it a free choice? --> This really depends on what you're trying to get the machine to learn. You can get the model to learn how your brain coordinates with your hands and feet, but then the model would learn how to 	coordinate hands and feet given visual, electrical stimuli. That requires one type of data and will result in a niche set of rewards. Coversally, assuming your eyes are a camera (for the computer), you can teach the model to 	"move arm" or "move leg" based on what is seen. The task itself is slightly different. It's trying to accomplish the same thing, but the data is different: one does it through dirrect electrical signals processing and another 	analyzes image data. So, which to choose? Whichever is easier to acquire data. Is it a free choice? Generally, it isn't because you can't get optimal results with both. One way is tipically easier to process than the other. 
+	
+	
+
+3.2 Goals and Rewards [short]: informally, the RL model wants to maximize rewards, meaning cumulative in the long-run. This may be stated as the REWARD HYPOTHESIS:
+	"That all of what we mean by goals and purposes can be well thought of as the maximization of the expected value of the cumulative sum of a received scalar signal (called reward)."
+	
+	- The reward is what makes the robot work. The reward must, therefore, be a close indicative to the goal we're trying to get the model to achieve. This is crucial. We want the robot addicted to winning. We want it addicted to 	winning as efficiently as possible. Supposedly, the goal must be very clear and not given subdivisions. You get reward if win. You get more reward if win within less time. "Subplays" shouldn't matter. However, we're not trying 	to teach it to win, but to do "correct plays," which can be expressed in short-term or long-term gold and other metrics. The point is: the agent might learn how to get gold without learning how to win. If rewarded for 	"subplays," then the agent will not mind losing so long as the subplays are optimal. This is something to watch out for. The reward communicates "what" you're trying to achieve, not "how."
+ 
+ 
+3.3 Returns and Episodes [medium]: let's formally define how the model maximizes its rewards in the long-run. 
+	
+	- We need to define a new variable: return or G_t. Return is a function of the sequence of rewards. In the simplest of terms, Gt .= R_t+1 + R_t+2 + R_t+3 + R_t+4 + R_t+5 + R_t+6 + ... + R_T. In this example, the agent-		environment interaction breaks up into subsequences of rewards, called EPISODES. These are like plays in a game or any sort of repeated interaction. 
+	Episodes ends in TERMINAL STATES, then resets to a standard start or a sample of a random distribution of starting states. Episodes all end in the same terminal state. All episodes end in the same terminal state, but have 		different reward outcomes. If tasks, like win a game, can be subdivided into episodes of this kind, they are considered EPISODIC TASKS. Time of termination, T, varies from episode to episode.
+	Note: squiggly S means terminal state, while squiggly S+ means all states plus the terminal one. 
+	
+	- We may have, on the other hand, CONTINUING TASKS, which have no identifiable episodes for the agent-environment interaction to be broken into. There is no terminal time limit for these systems, which is an issue for our 		previous definition of Gt would keep going forever. 
+	For this reason, we define a new concept: DISCOUNTING. This helps the math more than it does the concept. The agent will choose some action to maximize the expected DISCOUNTED RETURN by using a DISCOUNT RATE (from 0 to 1), 	represented by the letter gamma. This rate determines the current value of future rewards, meaning a reward k time steps in the future is worth gamma^(k-1), which is less. If gamma is less than one, the infinite sum of figure 	3.3 has a finite value. If gamma is zero, then the agent is only interested in making the best immediate choice only (that's called being myopic). As gamma approaches 1, future rewards are accounted more strongly, developing 	greater far sight. 
+
+	EXERCISES:
+	- Exercise 3.5 The equations in Section 3.1 are for the continuing case and need to be modified (very slightly) to apply to episodic tasks. Show that you know the modifications needed by giving the modified version of (3.3).
+	--> Done on Ipad. Check Exercise3.5
+	- Exercise 3.6 Suppose you treated pole-balancing as an episodic task but also used discounting, with all rewards zero except for 1 upon failure. What then would the return be at each time? How does this return di↵er from that 	in the discounted, continuing formulation of this task? --> The return would be 0 at each time, since the model cannot obtain a reward any greater than 0. It doesn't?
+	- Exercise 3.7 Imagine that you are designing a robot to run a maze. You decide to give it a reward of +1 for escaping from the maze and a reward of zero at all other times. The task seems to break down naturally into episodes—the successive runs through 	the maze—so you decide to treat it as an episodic task, where the goal is to maximize expected total reward (3.7). After running the learning agent for a while, you find that it is showing no improvement in escaping from the maze. What is going wrong? Have 	you e↵ectively communicated to the agent what you want it to achieve? --> You're not punishing the robot for doing things that it shouldn't be doing, like hitting walls or taking too long to escape. If it's not incentivized to escape 	fast, then it doesn't see "not escaping" as an issue. Again, it doesn't yet know that a reward means escaping, so it's perpetually walking back and forth, stalling and hitting walls. So, no, you did not communicate efficiently.
+	- Exercise 3.8 Suppose  = 0.5 and the following sequence of rewards is received R1 = 1, R2 = 2, R3 = 6, R4 = 3, and R5 = 2, with T = 5. What are G0, G1, ..., G5? Hint: Work backwards. --> Check Exercise3.8
+	- Exercise 3.9 Suppose  = 0.9 and the reward sequence is R1 = 2 followed by an infinite sequence of 7s. What are G1 and G0? -->Check Exercise3.9
+	- Exercise 3.10 Prove the second equality in (3.10). --> Nah!
+
+3.4 Unified Notation for Episodic and Continuing Tasks [short]:
+	
+	- The notation for episodic tasks is cumbersome. We need to be able to refer to different episodes as well as different time steps. For this reason, we say S_t,i or R_t,i or A_t,i, etc. It's important to note that notation abuse	is pretty common with these types of tasks since episodes are often nearly the same or we are considering just one specific episode. Just note that if you don't see the "i" subscript in this type of task, it's actually meant to 	be there. This helps find a unified notation since we are now looking at episodes in a continued series. Unlike continuous tasks, they are not a series of states and rewards, but still. 
+	
+	- To promote a unified notation, we consider a state for episodic tasks called ABSORBING STATE. They are a state that sits right after the termination state. It generates no rewards and always loops back to itself. This creates 	the effect of a continuous task, even though it's episodic. That episode will go on forever while keeping the same value. Even with discounting, this remains true. We simply must use the convention of omitting episode number, or	i, (when not required) and return may be generalized. The definition in figure 3.4 allows for this generalization. T may be infinite, meaning continuous task, or gamma may be 1, meaning episodic tasks, but both can't happen, 	allowing for a unification in notation. 
+
+3.5 Policies and Value Functions [long]: value functions are functions that estimate how good is the state of the agent or to perform an action on a state. "How good" translates to future rewards expected, meaning return. Rewards depend on what actions are taken by the agent, which are, in turn, defined by particular ways or acting, or POLICIES. 
+
+	- A POLICY is, then, nothing but a function. It is the probability of getting to a state, St, through action At, or pi(a|s), where pi symbolizes the policy. RL can be simply defined as a method to modify policies based on 		experience. 
+	
+	EXERCISES:
+	Exercise 3.11 If the current state is St, and actions are selected according to a stochastic policy pi, then what is the expectation of Rt+1 in terms of pi and the four-argument function p (3.2)? --> 
+	It asks: if St and set of At are selected as per policy pi, then what do we expect Rt+1 to be in terms of pi and p.
+	p is defined as p(s',r| s,a), while pi is defined as pi(a|s).
+	If on a previous situation given: the first statement says if s' and r, then what's s and a? This one asks: if a, then what's s.
+	The first framework looks at it in terms of a previous situation and reward affecting the next situation and action. This one looks at it by the current action affects the subsequent reward. 
+	So, the p framework expects a next state and action from the previous reward and state, while pi expects a state to come from an action. They are linked but not the same. The previous reward and state will lead to a new state 	with its own set of action, but the action on that state is chosen to lead to a new state. 
+	
+	- The VALUE FUNCTION of a state, s, under a policy, pi, is the expected return when starting from a state s and following through with the policy pi. Formally, it is defined as per Figure 3.5. 
+	The value function can be defined as the expected value of the state for a certain return or cumulated reward, given a pi policy. Formally, Gt, or the return, can be expressed as we have seen before in Chapter 3.3 with Figure 	3.3. This is called the STATE-VALUE FUNCTION FOR POLICY PI. 
+	We can define the value of taking an action in a given state under a policy π as the expected return starting from that state and action, and then following policy π afterward. This is shown in Figure 3.6. Essentially, it's the 	expected value of the total future rewards (return) you’ll get if you’re in state s, take action a, and continue with policy π.
+	""
+	EXERCISES: 
+	Exercise 3.12: Give an equation for v_pi in terms of q_pi and pi --> Nah!
+	
+	Exercise 3.13: Give an equation for q_pi in terms of v_pi and the four-argument p. --> Nah!
+	""
+	Figures 3.5 and 3.6 are the value functions. They can be estimated from experience. If you follow a policy and maintain an average of the returns that followed that state for each state encountered, then the average will turn 	into v_pi(s) [value function of Figure 3.5] if infinite samples are taken. If separte averages are taken for each action in each state, then the averages will converge to q_pi(s,a) [value function of figure 3.7]. 
+	Estimation methods that keep an average over many random samples of actual returns are called MONTE CARLO METHODS. 
+
+	Value functions for a policy satisfy recursive relationships, whcih is shown in the equation of Figure 3.7. A value function can be defined as the: 1. Sum of all actions for the probability pi (or policy) of an action happening 	in a state, 2. Sum of all future state (s') and rewards for the probability p of a future state and reward happening if at a current state doing an action, and 3. the followed reward + the value function of a policy for a future	state, given a degree of discount. This is called the BELLMAN EQUATION FOR V_PI. 
+	
+	The diagram of Figure 3.8 nicely summarizes the findings of the Bellman Equation: in a given state, one may follow a policy to bring about several different actions. After picking an action, a reward is produced leading to the 	next state. Picking an action is probabilistically determined by the policy pi and the reward and followed state (chosen by the environment) are probabilistically determined by p. The Bellman equation averages all the 	possibilities, weighting each by the probability of occurring, as is defined by the equation: the value of the start state must equal discounted value of the expected next state plus the reward. 3.8 is a BACKUP DIAGRAM. 
+
+	""
+	EXERCISES:
+	- Figure 3.9 shows a grid world example needed for the following exercises. It shows on the right side what are the expected value of being in each grid as per the current policy.  
+	- Exercise 3.14 The Bellman equation (3.14) must hold for each state for the value function v_pi shown in Figure 3.2 (right) of Example 3.5. Show numerically that this equation holds for the center state, valued at +0.7, with 	respect to its four neighboring states, valued at +2.3, +0.4, -0.4, and +0.7. (These numbers are accurate only to one decimal place.) --> The exercise is trying to do two things: 1. Show you how to use the Bellman equation and 	2. Show you how the Bellman equation opeartes/thinks. I didn't really udnerstand what it was trying to get me to do until I asked ChatGPT to do it for me. Now I have a reasonably good understanding of what's going on. Figure 	3.10 summarizes is a screenshot of my notes showing how to solve this problem. 
+
+	- Exercise 3.15 In the gridworld example, rewards are positive for goals, negative for running into the edge of the world, and zero the rest of the time. Are the signs of these rewards important, or only the intervals between 	them? Prove, using (3.8), that 	adding a constant c to all the rewards adds a constant, vc, to the values of all states, and thus does not a↵ect the relative values of any states under any policies. What is vc in terms of c and 	[discout rate]?  --> Refer to Figure 3.11 for answers.
+	- Exercise 3.16 Now consider adding a constant c to all the rewards in an episodic task, such as maze running. Would this have any e↵ect, or would it leave the task unchanged as in the continuing task above? Why or why not? Give 	an example. --> The main reason why the continous task described previously was unchanged is due to the fact that the variable was directly addded to every reward after every action for every state. Considering that some rewards 	in episodic tasks can be modelled exactly like continous tasks, then they would also not change relative to each other. The machine would still have to consider the difference between how much reward it obtained more than the 	value itself. So long, of course, as this change was done to every reward across different episodes.
+	The above answer missed a key detail: periodic tasks incorporate length, and you fail to recall that every episode has a different length. For this reason, adding a consntant term will inflate larger episodes; the model will now	attempt to inflate the length of episodes to get more rewards instead of improving its own parameters. Remember: episodes have lenght while continous tasks do not. 
+
+	""
+	""
+	EXERCISES:
+	- Figure 3.12 shows a golf example needed for the following exercises. It shows on the right side what are the expected value of being in each grid as per the current policy.  
+	- Exercise 3.17 What is the Bellman equation for action values, that is , for q⇡? It must give the action value q⇡(s, a) in terms of the action values, q⇡(s0, a0), of possible successors to the state–action pair (s, a).Hint: The 	backup diagram to the right corresponds to this equation.Show the sequence of equations analogous to (3.14), but for actionvalues. --> The answer will be provided in Figure 3.13, but there are a few important things to note 	here: 1. recall that there are two value functions: the state-value function, v_pi(s) = E_pi[Gt|St = s], and the action-value function, q_pi(s,a) = E_pi[G_t| St = s, A_t = a]. The former analyzes the expected return of just the	state when following a policy. The latter analyzes the return of the state-action pair, meaning after taking an action a at state s following policy pi. The latter is more specific in that regard. Here, they ask you how good the 	hit was after it was done, following a policy based on its state. Before, it just wanted to know how good the state was to be in, given the policy the model was under.
+	""
+3.6 Optimal Policies and Optimal Value Functions [long]: for finite MDPs, optimal policies are those whose value functions are superior for every state if compared to other policies. There is at least one policy superior than all others. That's the OPTIMAL POLICY, denoted pi*.  Note: THE BELLMAN OPTIMALITY EQUATION HAS A UNIQUE SOLUTION FOR FINITE MDPs.
+
+	- Optimal policies share the same state-value function, called the OPTIMAL STATE-VALUE FUNCTION, denoted v*, as per v*(s) .= max_pi v_pi(s). This is the same for the OPTIMAL ACTION-VALUE FUNCTION: q*(s,a) .= max_pi q_pi(s,a). We 	may write q* in terms of v*, which is shown in the book as the expected return for an action in a state following a policy. 
+
+	- The optimal value function still follows the Bellman equation. Intuitively, the value of the function for this equation exactly equates the expected return for the best action in that state. This is called the BELLMAN 	OPTIMALITY FUNCTION: 
+		It's similar to what we've seen so far. The only difference in the equation is that "max_a" is explicitly defined. This means the best action in this state to generate the largest return. It can be further expanded into		the action-value function realm in a similar way. You may find these two equations on pages 63 and 64. I won't include them here because they're very familiar. 
+
+	- This can be represented as a system of n non-linear equations for n states and n unknowns. It's solvable if one knows the dynamics, p, of the environment. Once found, any policy that is greedy with respect to this optimal 	evaluation value function, v*, is an optimal policy. Usually, greedy means short-term guided, but not in this case since value functions are always looking for long-term return. This is even easier with q* because you no longer	have to do a one-step-ahead search for better actions. The function itself allows you to determine the optimal action through its maximization. This means you don't have to know about future states, meaning you don't have to 	understand the environment's dynamics to make predictions. Visual examples are shown in the book of the system of equation and the computer logic.
+
+	EXERCISES:
+	- Exercise 3.20 Draw or describe the optimal state-value function for the golf example. --> This would be the function that is greedy with respect to actions within a state following some policy. Given that the policy of the	golf example is to pick the correct club and ensure that the hit moves to the next region over. In other words, the optimal state-value function is that which always has the correct club, consistently hits the ball to the next 	region over, and never lands on the sand areas. Since it's a state-value function, then it also knows that next reward and state caused by this action. [Select putter for two first shots and drivvers for the last shot].
+	- Exercise 3.21 Draw or describe the contours of the optimal action-value function for putting, q*(s, putter), for the golf example. --> In this case, the action-value function is greedy with the actions taken by the agent 	within a state following some policy. Within the putting context, the hit must be such that the ball always lands on the next area over while always avoiding the sand. 
+	- Exercise 3.22 Consider the continuing MDP shown to the right. The only decision to be made is that in the top state, where two actions are available, left and right. The numbers show the rewards that are received 	deterministically after each action. There are exactly two deterministic policies, pi_left and pi_right. What policy is optimal if dicount rate = 0? If dicount rate = 0.9? If dicount rate = 0.5? --> If 0, then left (because the 	discount rate makes any future reward have no value). If 0.9, then right. If 0.5, then they generate the same value. (It's possible that the discount rates keeps getting accounted for even after the reset, in which case left 	is better always, other than 0).
+	- Exercise 3.23 Give the Bellman equation for q* for the recycling robot. --> Exercise3.23 shows the answer. 
+	- Exercise 3.24 Figure 3.5 gives the optimal value of the best state of the gridworld as 24.4, to one decimal place. Use your knowledge of the optimal policy and (3.8) to express this value symbolically, and then to compute it 	to three decimal places. 
+	--> Exercise 3.25 shows the answer. 
+	I don't think I can physically bring myself to do the following questions:
+	- Exercise 3.25 Give an equation for v* in terms of q*. --> 
+	- Exercise 3.26 Give an equation for q* in terms of v* and the four-argument p. -->
+	- Exercise 3.27 Give an equation for pi* in terms of q*. -->
+	- Exercise 3.28 Give an equation for pi* in terms of v* and the four-argument p. -->
+	- Exercise 3.29 Rewrite the four Bellman equations for the four value functions (vpi, v*, qpi, and q*) in terms of the three argument function p (3.4) and the two-argument function r(3.5). -->
+	
+
+3.7 Optimality and Approximation [short]: though we can get to the concept of an optimal policy, it is extremely rare that this is feasible to be achieved in real life. Often times, it simply is approximated. 
+	- The main reasons why it is not achievable are: 1. the dynamics of the environemnt are not accurately known, 2. computational resources are not sufficient to calculate all value function returns and actions, 3. states do not 	always have Markov property. Memory is also an issue. A lot of it is required to approximate value funcitons, policies, and models. 
+
+	- One key distinguishing aspect of RL when dealing with the MDP is the fact that approximate optimal policies may still result in extremely positive outcomes. Often times, the agent will make "bad decision," if we're thinking in	a game of backgammon, for instance, but those still lead to high rewards. This is the sort of thing that allows the computer to say "hey, this player is bad. I can make this technically bad play to get optimal rewards from him."
+
+3.8 Summary [short]:
+	- Let's summarize:
+		- An RL agent acts on an environemnt. We have full control of the agent, who makes actions based on states which are evaluated by erwards. The environment is incompletely controllable and not necessarily fully 			understood.
+		- If the above framework is formulated with well dfiend transition probabilities, then it constitutes a MDP. A FINITE MDP is an MDP with a finite state, action, and reward set. 
+		- Return is the function that defines future rewards, which the agent attempts to maximize. We may implement DISCOUNTS to delayed rewards. Undiscounted formulation fits EPISODIC TASKS, where interaction fit naturally 		into episodes with defined start and terminal states. Otherwise, tabular continuing tasks use discounts. 
+		- A policy's value function (or action-value function) estimates the return from a certain state within a policy. The best value function, meaning the one that always picks the best actions in a state within a policy is		the optimal value function. A policy that follows the optimal value function is an optimal policy, meaning it is greedy with respect to the optimal value functions. The Bellman optimality equations are special
+		consistency conditions that must be satisfied by the optimal value functions and are supposedly solved.
+		- Achieving the above optimal policies is often not feasible and we're usually much more concerned with good approximation of it. 
+
