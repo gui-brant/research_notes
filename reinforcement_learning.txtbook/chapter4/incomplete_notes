@@ -1,0 +1,100 @@
+Part 1: Tabular Solution Methods 
+
+Expected Completion in 2 - 3 days.
+
+Chapter 4 - Dynamic Programming: it's a foundational, theoretical background for what is taught in the rest of the book. It assumes a lot computational power and knowledge of the environment, which are never there. However, the rest of the book will essentially be talking about how you can make DP with less comp power and knowledge, so this is an important stepping stone. We'll see here how DP can be used to compute Chapter 3's value functions and find optimal policies.
+
+Chapter 4.1 Policy Evaluation (Prediction):
+
+	- If we start with some approximate state-value function (that maps the set of states to real numbers) and continue in a sequence of state-value functions as to fully map all states in the policy, then the first state-value 	function is chosen arbitrarily. As per the Bellman equation, if we continue to update the state-value function iteratively, as the iterations go to infinity, they will equal the policy's absolute state value function. This 		algorithm is called ITERATIVE POLICY EVALUATION.
+	To produce an iteration's update, the algorithm replaces the old value of s with a new value obtained from old values of successor states of s and the expected immediate reward. This also takes into account the one-step 	transition possible as per the evaluated policy. This is called an EXPECTED UPDATE. This process produces a new approximate value function, denoted v_k+1. 
+	The first mention of this implementation is by creating two arrays; one with old values of the old state-value function and another with the new values. Alternatively, you could simply update an array with the new values, which 	is even better since you're only working with data that is readily available. Page 75 of the book includes pseudo-code demonstrating this workflow.
+
+	EXERCISES:
+	- Exercise 4.1 In Example 4.1, if pi is the equiprobable random policy, what is q_pi(11, down)? What is q_pi(7, down)? --> We're asked for the action-value function of moving down from 11. This has a direct reward of -1 and 	expected return value of 0. In other words, the value function should simply converget to -1. In the case of going down from 7, since all actions are equiprobable afterwards, the imediate reward is -1, and all rewards following 	are also -1, each with a chance of 0.25 to occur. Thus, the followed action must be -0.25 * 4. The expected value return should be -2. 
+
+	- Exercise 4.2 In Example 4.1, suppose a new state 15 is added to the gridworld just below state 13, and its actions, left, up, right, and down, take the agent to states 12, 13, 14, and 15, respectively. Assume that the transitions from the original states are 	unchanged. What, then, is v_pi(15) for the equiprobable random policy? Now suppose the dynamics of state 13 are also changed, such that action down from state 13 takes the agent to the new state 15. What is v_pi(15) for the equiprobable random policy in this 	case? --> It is not possible to teleport, hence there is no value aggregated in any of those actions, other than the direct reward of -1 (honestly, I have no idea). The same is true for the other example; simply -1. 
+
+	Exercise 4.3 What are the equations analogous to (4.3), (4.4), and (4.5), but for actionvalue functions instead of state-value functions? --> 4.3: add A = a; 4.4: add q_pi(s', a) instead of v_pi(s'); 4.5: same change as 4.4.	
+
+	ALL ANSWERS ABOVE ARE COMPLETELY INCORRECT. Corrections: 
+
+	Exercise 4.1: You actually got the 11, down one correct. The (7, down) has a total total value of -15: -1 [reward] + [these are for expected future return] -1 (for right) + -1 (for down) + -12 (for left or right). Your intuition 	was initially correct. Ideally, after you reach the 11 spot (after moving away from 7), going left or up from 11 means you can keep on moving around the grid sequentially as much as you like, meaning another 12 different 	possible moves to reach any terminal state in any direction through any square. CLOSE ONE! TRUST YOUR INTUITION MORE!
+
+	Exercise 4.2: vπ(15) = 0.25 [(−1 + −20) + (−1 + −22) + (−1 + −14) + (−1 + vπ(15))] --> 4 possible options, each with the same chance. You did think about doing this, but you only account for the immediate reward of -1 in your 	head, you completely forgot about the expected return that comes after said action. Moving left allows you for -12 moves around and -2 for each hit on a wall. Moving up allows for -20 possible new moves around the grid. Moving 	right allows for -22 extra moves. Moving down rewards -1 and keeps you at the same state-value function as the one currently evalutated, meaning a recursive operation. 
+	The second presetned condition simply tells us that now v_pi(15) is the same as v_pi(13), which we've found to be equal to -20 in expected return. Therefore, this allows us to complete the calculation as per: vπ(15) = −15 + 0.25 	[−20].
+
+	Exercise 4.3: 4.3: There is a multiplier of v_pi(s) that you did not include; 4.4: sum of all pi(a|s) goes inside the [], beside the discount rate. This summation is now part of evaluating the logic for each action as per 		consultation of the policy at use; 4.5: The same mistake that you made on 4.4 was for 4.5, but you did get it right that the changes are all the same. 
+
+Chapter 4.2: Policy Improvement: 
+
+	- We often wish to modify policies to obtain improved results. If we isolate a specific state, then so long as the action-value function of applying a new policy's action upon this current state, even if this action-value 	function is still behaving within the previous policy (think of it like exploration), is greater than or equal to the state-value function, then the state-value function of this new policy at this state is also necessarily 	greater than or equal to the state-value function at this state from the previous policy. 
+
+	What I'm trying to say is this: if q_pi(s, pi'(s)) >= v_pi(s), then v_pi'(s) >= v_pi(s), meaning you have definitively found a new policy that performs better than an old policy in this state through the old policy's action-	value function. This is called the POLICY IMPROVEMENT THEOREM. 
+
+	- The issue with this point is that we don't want to just look at one specific state. We want to find a policy that is overall superior than the previous one in all states. 
+	We may, then, make this new policy greedy with respect to the old policy by defining it as .= argmax_a q_pi(s,a) = argmax_a (sum off all s', r) p(s',r |s, a)[r + (discount rate)v_pi(s')].
+	This is called POLICY IMPROVEMENT, which follows the POLICY IMPROVEMENT THEOREM.
+	If the previous policy and this one happen to be the same, that means that they are both optimal policies and, upon inquiring their definition, one will find that they boil down to the Bellman optimality equation, reinforcing 	the point. 
+	
+	- Policy improvement extends easily into the stochastic case. Moreover, in the stochastic framework, if there are ties in actions that are optimal, then those actions may be given portions of the probability of being selected.	This is fine so long as anything suboptimal is not considered within the apportioning scheme of the probability. 
+
+	- Figure 4.1 is a good representation of this policy improvement logic. To be clear, here is it shown that the final state is optimal, but one can only guarantee improvement, not optimality. 
+
+Chapter 4.3 Policy Iteration: 
+
+	- Summarizing what we learned previous, the state-value function of each policy allows us to perform policy evaluation and then policy improvement, leading to a new policy and then a new state-value function. This can be done 	iteratively until one finds the optimal policy. Every previous policy's value state function, new policy, policy evalution through value state function, and policy improvement iteration is denoted a policy iteration. Note that 	each policy iteration starts with a the previous policy's state value funciton. That promotes faster convergence. 
+
+	- Example 4.2 Jack's Car Rental: 
+		- 2 locations managed
+		- Customers arrive in both locations every day
+		- If car available, +0 per customer. Otheriwse, +-bash.
+		- If car returned, then car = +0 after 1 day.
+		- If location has high request, move car from location 1 to location 2 (or vice-versa) but car -= 
+		- Car request is a Poisson Distribution: number of times an event happens (n) given a fixed time interval: events are independent of each other; the average rate of occurrence is constant (lambda); two events can't occur 		at the same time. 
+		- Location 1: expected average of rents (lambda) = 3; returns = 3. Location 2: expected average of rents (lambda) = 4; returns = 2.
+		- No more than 20 cars per location. 
+		- Max of 5 cars moved between locations in one night. 
+		- Continuing finite MDP with discount rate = 0.9
+		- Time step = 1 day; state = number of cars per location; action = number of cars moved between locations.
+
+	EXERCISES:
+	- Exercise 4.4 The policy iteration algorithm on page 80 has a subtle bug in that it may never terminate if the policy continually switches between two or more policies that are equally good. This is okay for pedagogy, but not for actual use. Modify the 	pseudocode so that convergence is guaranteed. -->  Simply create an exit from the loop in case the next policy is within a range of efficiency from the previous policy. At the Policy Improvement part of the algorithm, for each state 	in the state set, we set the old policy at this state to perform the old action. If this old action does not meet the argmax of the action-value function within the policy, then it is not stable. If there are two different 	actions there are equally as optimal, then this creates a problem because the old action is not, in fact, the action wihtin this policy that maximizes the action-value function in this state. Therefore, the loop requires a new 	if-statement: for each state in the state set, if old-action within this policy and state is optimal, then policy-stable = True. 
+
+	-  Exercise 4.5 How would policy iteration be defined for action values? Give a complete algorithm for computing q⇤, analogous to that on page 80 for computing v⇤. Please pay special attention to this exercise, because the ideas involved will be used 	throughout the rest of the book. -->  The main difference between an action state funciton and a value state function is that the action state function does not require foresight of the next situation as a comparison for what must be	optimal. One must simply input the action to the action-state function to check whether the result is optimal. Firstly, we have to use q(s,a) and Q(s,a) instead of v(a) and V(s). Secondly, policies have to include the actions 	and the states. Thirdly all summation signs must include action as well as next state and reward. However, the argmax equation looks correct. Finally, one no longer needs to compare the old-action to check if the policy is s	table. Simply compuute whether this action in this policy and state maximizes the function. If it does not, then it is not optimal and the next action must be attempted. 
+
+	- Exercise 4.6 Suppose you are restricted to considering only policies that are epsilon-soft, meaning that the probability of selecting each action in each state, s, is at least epsilon/|A(s)|. Describe qualitatively the changes that would be required in 	each of the steps 3, 2, and 1, in that order, of the policy iteration algorithm for v* on page 80. -->  This is a change stricly to actions. The way in which actions are probabilistically chosen is different. Now, each action is picked according 	to their value. The odds of picking action a at a state s are at least epsilon/|A(s)|. 1. shouldn't change because you still need to pick actions from A(s). It's just that now a specific action has the minimal choice of epsilon/	|A(s)|. 2. Any value state function does not directly acount for the action taken at a certain moment, meaning that the policy evaluation would not include this either. Fundamentally, it's just comparing how good is it to be in a 	certain state in this policy, given long-term return. 3. The way that policies are improved must change. If the policy is not stable, you change it. The previous action within the policy dictates whether the policy was stable. 	To have a policy whose old-action brought a chance of expected return that is not optimal means that the policy must be changed. Therefore, you have to account for the change in probability in step 3 by adding the epsilon term. 	
+	EXERCISE REVIEW: 
+	- 4.4: Your rationale wasn't spot-on but was pretty close. Simply allow for the argmax function to pick the first action to result from the argmax (choose the "most comfortable" one, for that matter). The main mistake here is 	that the actual glitch happens because they will be constantly hopping back and forth between two different actions instead of just sticking to one. You tried to say it in programming term when, really, you could have just said 	what you were thinking normally: set the argmax function to pick the first action that appears as optimal. Set that as the optimal action for this policy in this state. Nothing more to it than that. Overthought it a little bit. 
+
+	- 4.5: Really close! The only issue is that you thought that the previous equation for the argmax function was the action-value function equation but you were, in fact, incorrect. Remember the action-value equation includes the 	actual action-value function equation for the next action and state in itself. They both include the action evaluation is just that the main point about the action-value function is the fact that it doesn't have to predict 		outcomes to come to a conclusion; it is already looking one step ahead by default. 
+
+	- 4.6: This one was pretty bad.
+	Changes: 3. Your mind was in the right place but you didn't express it correctly. Instead of the argmax creating a deterministic action, we update each policy to receive an action with probability epsilon/|A(s)|. Therefore, the 	max action would receive a 1 - epsilon + epsilon/|A(s)|, meaning just 1 since A(s) = 1. This means the output is stochastic now. 2: we would have to loop all states and actions now and weighting their value by the probability of 	the action being selected. 1: the policiy is now instantiated with an arbitrary distribution over the action space in each state.
+	Meaning everything changes from deterministic to stochastic, probabilistic distributions. 
+
+	- 4.7: Here's the thing about this exercise. They're asking me to program the problem that was summarized about with the following modifications: 
+		- 1 car from location 1 to location 2 is free.
+		- If more than 10 cars per time-step (day) on location, then +4. 
+	This problem is fairly complex. I did a good job of summarizing them here, but I would need to implement the framkework so that it may actually function as intended. I have literally never done that in my life, so we'll take it 	as a learning experience. The evaluated code is taken from https://github.com/enjeeneer/sutton_and_barto/blob/main/code/chapter4/ex4_7/models.py
+	Let's summarize his code down below: 
+	A. Import statements: 
+		1. import numpy as np so he can work with arrays
+		2. import os so he can play around with files and stuff related to the operational system
+		3. import itertools for easier and more efficient handling of iteration tasks
+		4. from scipt.ststs import poisson so we can use a poisson distribution to model the task
+		5. from tqdm import tqdm to visualize progression of loops and iterables or how the code progresses in running stuff (efficiency measure).
+	
+	B. Define the Environment() class:
+		1. Create methods: def __init__; def reset [as in, the day. As in, start time-step over]; def expected_reward; def expected_state_
+		2. Further define the def reset method:
+			i. def reset() takes in only the argument self
+			ii. self.state = np.random.randint(10, size=(2,)) sets the self.state variable to a random int 1D array with 2 variables with numbers from 0 (inclusive) to 10 (exclusive).
+			iii. return the self.state of the environment object 
+		3. Further define the def expected_reward() method:
+			i. it takes in three arguments: self, state, and action; for expected rewards depend on the state and action at a moment. Also, it's used given all possible next states and their rewards
+			ii. Define the action mathematically: action_array = np.array([action, -action], dtype = 'int64') --> This makes a 1D action_array with [action, -action] as its contents. dtype= 'int64' specifies the values 				within the array to be 64 bit integers, or just regular integers. This is useful for the very next step. 
+			iii. state_ calculates the state as a result of the action. The state input is a 1D array define as the current position, something like: [x_cars, y_cars]. state_ = state + action_array, or the state once you 			perform an action, which looks like this: state_ = [x_cars + action, y_cars -action]. It's the position of the cars after you move them from one location to another, or make an action.
+	
+
+	
